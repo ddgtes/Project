@@ -1,6 +1,6 @@
 import java.util.Scanner;
 
-abstract class Item {
+abstract class Item { //1
     String name;
 
     public Item(String name) {
@@ -10,7 +10,7 @@ abstract class Item {
     public abstract void show();
 }
 
-class Laptop extends Item {
+class Laptop extends Item { //2
     public Laptop(String name) {
         super(name);
     }
@@ -21,7 +21,7 @@ class Laptop extends Item {
     }
 }
 
-class Ball extends Item {
+class Ball extends Item { //3
     public Ball(String name) {
         super(name);
     }
@@ -32,44 +32,90 @@ class Ball extends Item {
     }
 }
 
-class Person {
-    private String name;
+class MakeUp extends Item { //4
+    public MakeUp(String name) {
+        super(name);
+    }
+    
+    public void show() {
+        System.out.println("Item Type: Lipstick");
+        System.out.println("Brand: " + name);
+    }
+}
 
-    public Person(String name) {
-        this.name = name;
+
+class Person { //5
+    private String person;
+
+    public Person(String person) {
+        this.person = person;
     }
 
     public String getName() {
-        return name;
+        return person;
     }
 }
 
-class Student extends Person {
-    public Student(String name) {
+class Name extends Person { //6
+    public Name(String name) {
         super(name);
     }
 }
 
-class Teacher extends Person {
-    public Teacher(String name) {
-        super(name);
+class Gender { //7
+    private String gender;
+    
+    public Gender(String gender) {
+        this.gender = gender;
+    }
+    
+    public String getGender() {
+        return gender;
+    }
+}
+class Male extends Gender { //8
+    public Male(String gender) {
+        super(gender);
     }
 }
 
-class BorrowSystem {
-    public void process(Person person, Item item) {
+class Female extends Gender { //9
+    public Female(String gender) {
+        super(gender);
+    }
+}
+
+
+
+class Age { //10
+    private int age;
+    
+    public Age(int age) {
+        this.age = age;
+    }
+    
+    public int getAge() {
+        return age;
+    }
+}
+
+class BorrowSystem { //11
+    public void process(Person person, Item item, Gender gender, Age age) {
         System.out.println("\n----- Receipt -----");
         System.out.println("User: " + person.getName());
+        System.out.println("Gender: " + gender.getGender());
+        System.out.println("Age: " + age.getAge());
         item.show();
         System.out.println("Status: Successfully Borrowed");
     }
 }
 
-class Menu {
+class Menu {//12
     public void display() {
         System.out.println("\nSelect Item to Borrow");
         System.out.println("1. Laptop");
         System.out.println("2. Basketball");
+        System.out.println("3. Make-Up Kit");
     }
 }
 
@@ -83,10 +129,21 @@ public class Main {
         System.out.print("Enter your name: ");
         String name = input.nextLine();
 
-        Student user = new Student(name);
-
+        Person user = new Person(name);
+        
+        
+        System.out.print("Enter Gender(F/M): ");
+        String gender = input.nextLine();
+        
+        Gender selectedGender = new Gender(gender);
+        
+        System.out.print("Enter Age: ");
+        int age = input.nextInt();
+        
+        Age selectedAge = new Age(age);
+        
         menu.display();
-        System.out.print("Enter choice (1-2): ");
+        System.out.print("Enter choice (1-3): ");
         int choice = input.nextInt();
         input.nextLine();
 
@@ -96,13 +153,20 @@ public class Main {
             System.out.print("Enter Laptop Brand: ");
             String brand = input.nextLine();
             selectedItem = new Laptop(brand);
-        } else {
+        } else if(choice == 2){
             System.out.print("Enter Ball Brand: ");
             String brand = input.nextLine();
             selectedItem = new Ball(brand);
+        }  else if (choice == 3) {
+            System.out.print("Enter Makeup Brand: ");
+            String brand = input.nextLine();
+            selectedItem = new MakeUp(brand);
+        } else {
+            System.out.println("Invalid choice");
+            return;
         }
 
-        system.process(user, selectedItem);
+        system.process(user, selectedItem, selectedGender, selectedAge);
 
         input.close();
     }
