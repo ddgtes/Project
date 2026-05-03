@@ -1,173 +1,225 @@
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
-abstract class Item { //1
-    String name;
-
-    public Item(String name) {
-        this.name = name;
-    }
-
-    public abstract void show();
-}
-
-class Laptop extends Item { //2
-    public Laptop(String name) {
-        super(name);
-    }
-
-    public void show() {
-        System.out.println("Item Type: Laptop");
-        System.out.println("Model: " + name);
-    }
-}
-
-class Ball extends Item { //3
-    public Ball(String name) {
-        super(name);
-    }
-
-    public void show() {
-        System.out.println("Item Type: Sports Ball");
-        System.out.println("Brand: " + name);
-    }
-}
-
-class MakeUp extends Item { //4
-    public MakeUp(String name) {
-        super(name);
-    }
-    
-    public void show() {
-        System.out.println("Item Type: Lipstick");
-        System.out.println("Brand: " + name);
-    }
-}
-
-
-class Person { //5
-    private String person;
-
-    public Person(String person) {
-        this.person = person;
-    }
-
-    public String getName() {
-        return person;
-    }
-}
-
-class Name extends Person { //6
-    public Name(String name) {
-        super(name);
-    }
-}
-
-class Gender { //7
-    private String gender;
-    
-    public Gender(String gender) {
-        this.gender = gender;
-    }
-    
-    public String getGender() {
-        return gender;
-    }
-}
-class Male extends Gender { //8
-    public Male(String gender) {
-        super(gender);
-    }
-}
-
-class Female extends Gender { //9
-    public Female(String gender) {
-        super(gender);
-    }
-}
-
-
-
-class Age { //10
-    private int age;
-    
-    public Age(int age) {
-        this.age = age;
-    }
-    
-    public int getAge() {
-        return age;
-    }
-}
-
-class BorrowSystem { //11
-    public void process(Person person, Item item, Gender gender, Age age) {
-        System.out.println("\n----- Receipt -----");
-        System.out.println("User: " + person.getName());
-        System.out.println("Gender: " + gender.getGender());
-        System.out.println("Age: " + age.getAge());
-        item.show();
-        System.out.println("Status: Successfully Borrowed");
-    }
-}
-
-class Menu {//12
-    public void display() {
-        System.out.println("\nSelect Item to Borrow");
-        System.out.println("1. Laptop");
-        System.out.println("2. Basketball");
-        System.out.println("3. Make-Up Kit");
-    }
-}
-
 public class Main {
+
+    static Scanner scanner = new Scanner(System.in);
+    static List<User> users = new ArrayList<>();
+    static List<Recipe> recipes = new ArrayList<>();
+    static List<IngredientItem> inventory = new ArrayList<>();
+    static User loggedInUser = null;
+
     public static void main(String[] args) {
+        // Seed some data
+        users.add(new User(1, "john_doe", "pass1234", "john@email.com"));
+        users.add(new User(2, "mary_jane", "qwerty", "mary@email.com"));
+        recipes.add(new Recipe("Spaghetti Carbonara"));
+        recipes.add(new Recipe("Chicken Adobo"));
+        inventory.add(new IngredientItem("Tomato"));
+        inventory.add(new IngredientItem("Garlic"));
+        inventory.add(new IngredientItem("Chicken"));
 
-        Scanner input = new Scanner(System.in);
-        BorrowSystem system = new BorrowSystem();
-        Menu menu = new Menu();
+        // Pre-create admin (not in users list to keep separation)
+        Admin admin = new Admin(99, "admin", "admin123", "admin@system.com", 1);
 
-        System.out.print("Enter your name: ");
-        String name = input.nextLine();
+        System.out.println("=========================================");
+        System.out.println("   RECIPE MANAGEMENT SYSTEM");
+        System.out.println("=========================================");
 
-        Person user = new Person(name);
-        
-        
-        System.out.print("Enter Gender(F/M): ");
-        String gender = input.nextLine();
-        
-        Gender selectedGender = new Gender(gender);
-        
-        System.out.print("Enter Age: ");
-        int age = input.nextInt();
-        
-        Age selectedAge = new Age(age);
-        
-        menu.display();
-        System.out.print("Enter choice (1-3): ");
-        int choice = input.nextInt();
-        input.nextLine();
+        boolean running = true;
+        while (running) {
+            if (loggedInUser == null) {
+                showGuestMenu();
+                int choice = readInt();
+                switch (choice) {
+                    case 1 -> registerUser();
+                    case 2 -> loginUser(admin);
+                    case 3 -> { System.out.println("Goodbye!"); running = false; }
+                    default -> System.out.println("[!] Invalid option.");
+                }
+            } else if (loggedInUser instanceof Admin a) {
+                showAdminMenu(a);
+                int choice = readInt();
+                switch (choice) {
+                    case 1 -> a.manageUsers(users);
+                    case 2 -> { Report r = a.generateReport(users, recipes, inventory); System.out.println(r); }
+                    case 3 -> deleteRecipeMenu(a);
+                    case 4 -> { List<IngredientItem> inv = a.viewAllInventory(inventory); printInventory(inv); }
+                    case 5 -> { loggedInUser = null; System.out.println("[✓] Logged out."); }
+                    default -> System.out.println("[!] Invalid option.");
+                }
+            } else {
+                showUserMenu(loggedInUser);
+                int choice = readInt();
+                switch (choice) {
+                    case 1 -> updateProfileMenu(loggedInUser);
+                    case 2 -> viewFavoritesMenu(loggedInUser);
+                    case 3 -> viewRecipes();
+                    case 4 -> { loggedInUser = null; System.out.println("[✓] Logged out."); }
+                    default -> System.out.println("[!] Invalid option.");
+                }
+            }
+            System.out.println();
+        }
 
-        Item selectedItem;
+        scanner.close();
+    }
 
-        if (choice == 1) {
-            System.out.print("Enter Laptop Brand: ");
-            String brand = input.nextLine();
-            selectedItem = new Laptop(brand);
-        } else if(choice == 2){
-            System.out.print("Enter Ball Brand: ");
-            String brand = input.nextLine();
-            selectedItem = new Ball(brand);
-        }  else if (choice == 3) {
-            System.out.print("Enter Makeup Brand: ");
-            String brand = input.nextLine();
-            selectedItem = new MakeUp(brand);
-        } else {
-            System.out.println("Invalid choice");
+    static void showGuestMenu() {
+        System.out.println("-----------------------------------------");
+        System.out.println("  MAIN MENU  (not logged in)");
+        System.out.println("-----------------------------------------");
+        System.out.println("  [1] Register");
+        System.out.println("  [2] Login");
+        System.out.println("  [3] Exit");
+        System.out.print("  Choice: ");
+    }
+
+    static void showUserMenu(User u) {
+        System.out.println("-----------------------------------------");
+        System.out.println("  USER MENU  | Hello, " + u.getUsername() + "!");
+        System.out.println("-----------------------------------------");
+        System.out.println("  [1] Update profile");
+        System.out.println("  [2] View favorites");
+        System.out.println("  [3] Browse recipes");
+        System.out.println("  [4] Logout");
+        System.out.print("  Choice: ");
+    }
+
+    static void showAdminMenu(Admin a) {
+        System.out.println("-----------------------------------------");
+        System.out.println("  ADMIN MENU  | Level " + a.getAdminLevel());
+        System.out.println("-----------------------------------------");
+        System.out.println("  [1] Manage users");
+        System.out.println("  [2] Generate report");
+        System.out.println("  [3] Delete a recipe");
+        System.out.println("  [4] View all inventory");
+        System.out.println("  [5] Logout");
+        System.out.print("  Choice: ");
+    }
+
+    static void registerUser() {
+        System.out.println("\n--- REGISTER ---");
+        System.out.print("  Username: ");
+        String username = scanner.nextLine().trim();
+        System.out.print("  Password: ");
+        String password = scanner.nextLine().trim();
+        System.out.print("  Email: ");
+        String email = scanner.nextLine().trim();
+
+        // Check duplicate username
+        for (User u : users) {
+            if (u.getUsername().equalsIgnoreCase(username)) {
+                System.out.println("[!] Username already taken.");
+                return;
+            }
+        }
+
+        int newId = users.size() + 1;
+        User newUser = new User(newId, username, password, email);
+        newUser.register();
+        users.add(newUser);
+    }
+
+    static void loginUser(Admin admin) {
+        System.out.println("\n--- LOGIN ---");
+        System.out.print("  Username: ");
+        String username = scanner.nextLine().trim();
+        System.out.print("  Password: ");
+        String password = scanner.nextLine().trim();
+
+        // Check admin credentials first
+        if (username.equals(admin.getUsername()) && password.equals(admin.getPassword())) {
+            admin.login();
+            loggedInUser = admin;
             return;
         }
 
-        system.process(user, selectedItem, selectedGender, selectedAge);
+        // Check regular users
+        for (User u : users) {
+            if (u.getUsername().equals(username) && u.getPassword().equals(password)) {
+                u.login();
+                loggedInUser = u;
+                return;
+            }
+        }
 
-        input.close();
+        System.out.println("[!] Invalid username or password.");
+    }
+
+    static void updateProfileMenu(User u) {
+        System.out.println("\n--- UPDATE PROFILE ---");
+        System.out.print("  New username (current: " + u.getUsername() + "): ");
+        String newUsername = scanner.nextLine().trim();
+        System.out.print("  New email (current: " + u.getEmail() + "): ");
+        String newEmail = scanner.nextLine().trim();
+
+        if (!newUsername.isEmpty() && !newEmail.isEmpty()) {
+            u.updateProfile(newUsername, newEmail);
+        } else {
+            System.out.println("[!] Fields cannot be empty. Profile not updated.");
+        }
+    }
+
+    static void viewFavoritesMenu(User u) {
+        System.out.println("\n--- FAVORITES ---");
+        List<Recipe> favs = u.viewFavorites();
+        if (favs.isEmpty()) {
+            System.out.println("  No favorites yet.");
+        } else {
+            for (Recipe r : favs) {
+                System.out.println("  - " + r.getTitle());
+            }
+        }
+    }
+
+    static void viewRecipes() {
+        System.out.println("\n--- RECIPES ---");
+        if (recipes.isEmpty()) {
+            System.out.println("  No recipes available.");
+        } else {
+            for (int i = 0; i < recipes.size(); i++) {
+                System.out.println("  [" + (i + 1) + "] " + recipes.get(i).getTitle());
+            }
+        }
+    }
+
+    static void deleteRecipeMenu(Admin a) {
+        System.out.println("\n--- DELETE RECIPE ---");
+        if (recipes.isEmpty()) {
+            System.out.println("  No recipes to delete.");
+            return;
+        }
+        viewRecipes();
+        System.out.print("  Enter recipe number to delete: ");
+        int idx = readInt() - 1;
+        if (idx >= 0 && idx < recipes.size()) {
+            Recipe toDelete = recipes.get(idx);
+            a.deleteRecipe(toDelete);
+            recipes.remove(idx);
+        } else {
+            System.out.println("[!] Invalid selection.");
+        }
+    }
+
+    static void printInventory(List<IngredientItem> inv) {
+        System.out.println("\n--- INVENTORY ---");
+        if (inv.isEmpty()) {
+            System.out.println("  No items in inventory.");
+        } else {
+            for (int i = 0; i < inv.size(); i++) {
+                System.out.println("  [" + (i + 1) + "] " + inv.get(i).getName());
+            }
+        }
+    }
+
+    static int readInt() {
+        try {
+            String line = scanner.nextLine().trim();
+            return Integer.parseInt(line);
+        } catch (NumberFormatException e) {
+            return -1;
+        }
     }
 }
